@@ -1,9 +1,17 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import type { GeneratedComponent, Provider } from '../types';
+import {
+  STORAGE_KEYS,
+  addPromptHistory,
+  readStorage,
+  reviveComponents,
+  writeStorage,
+} from '../utils/storage';
 import { createNdjsonParser, stripLeadingFence } from '../utils/streamEvents';
 
 interface UseComponentGeneratorReturn {
   components: GeneratedComponent[];
+  promptHistory: string[];
   isLoading: boolean;
   error: string | null;
   generate: (prompt: string, apiKey: string | undefined, provider: Provider) => Promise<void>;
@@ -12,13 +20,33 @@ interface UseComponentGeneratorReturn {
 }
 
 export function useComponentGenerator(): UseComponentGeneratorReturn {
-  const [components, setComponents] = useState<GeneratedComponent[]>([]);
+  const [components, setComponents] = useState<GeneratedComponent[]>(() =>
+    readStorage(STORAGE_KEYS.components, [], reviveComponents),
+  );
+  const [promptHistory, setPromptHistory] = useState<string[]>(() =>
+    readStorage(STORAGE_KEYS.promptHistory, [], (raw) =>
+      Array.isArray(raw) ? raw.filter((p): p is string => typeof p === 'string') : undefined,
+    ),
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // 생성 중인 미완성 카드는 저장하지 않는다.
+    writeStorage(
+      STORAGE_KEYS.components,
+      components.filter((c) => !c.isStreaming),
+    );
+  }, [components]);
+
+  useEffect(() => {
+    writeStorage(STORAGE_KEYS.promptHistory, promptHistory);
+  }, [promptHistory]);
 
   const generate = useCallback(async (prompt: string, apiKey: string | undefined, provider: Provider) => {
     setIsLoading(true);
     setError(null);
+    setPromptHistory((prev) => addPromptHistory(prev, prompt));
 
     const id = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
     const update = (patch: Partial<GeneratedComponent>) =>
@@ -82,5 +110,5 @@ export function useComponentGenerator(): UseComponentGeneratorReturn {
     setComponents([]);
   }, []);
 
-  return { components, isLoading, error, generate, removeComponent, clearAll };
+  return { components, promptHistory, isLoading, error, generate, removeComponent, clearAll };
 }
