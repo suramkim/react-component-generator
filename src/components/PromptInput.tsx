@@ -30,47 +30,51 @@ export function PromptInput({ onGenerate, isLoading }: PromptInputProps) {
 
   return (
     <div className="prompt-section">
-      <div className="prompt-heading">
-        <span className="panel-kicker">Prompt</span>
-        <h2>무엇을 만들까요?</h2>
-      </div>
+      <label htmlFor="prompt" className="prompt-heading">
+        무엇을 만들까요?
+      </label>
       <form onSubmit={handleSubmit} className="prompt-form">
         <textarea
+          id="prompt"
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           placeholder="예: 고객 목록 테이블 위에 들어갈 검색 필터 바를 만들어줘. 상태, 담당자, 날짜 범위 필터가 필요해."
           className="prompt-textarea"
-          rows={3}
+          rows={4}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
               handleSubmit(e);
             }
           }}
         />
-        <button
-          type="submit"
-          className="btn-generate"
-          disabled={!prompt.trim() || isLoading}
-        >
-          {isLoading ? (
-            <span className="loading-spinner">생성 중...</span>
-          ) : (
-            '컴포넌트 생성'
-          )}
-        </button>
+        <div className="prompt-submit">
+          <span className="prompt-hint">⌘/Ctrl + Enter로도 생성됩니다</span>
+          <span className="default-ring">
+            <button
+              type="submit"
+              className="btn btn-generate"
+              disabled={!prompt.trim() || isLoading}
+            >
+              {isLoading ? '생성 중...' : '컴포넌트 생성'}
+            </button>
+          </span>
+        </div>
       </form>
       <div className="prompt-examples">
-        <span className="examples-label">예시 프롬프트</span>
-        {EXAMPLES.map((example) => (
-          <button
-            key={example}
-            className="example-chip"
-            onClick={() => handleExampleClick(example)}
-            type="button"
-          >
-            {example}
-          </button>
-        ))}
+        <p className="examples-label">예시로 시작하기</p>
+        <ul className="example-list">
+          {EXAMPLES.map((example) => (
+            <li key={example}>
+              <button
+                className="example-item"
+                onClick={() => handleExampleClick(example)}
+                type="button"
+              >
+                {example}
+              </button>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { GeneratedComponent } from '../types';
 import { LivePreview } from './LivePreview';
 import { CodeView } from './CodeView';
+import { TitleBar } from './TitleBar';
 
 interface ComponentCardProps {
   component: GeneratedComponent;
@@ -21,57 +22,52 @@ export function ComponentCard({ component, onRemove, onRegenerate, isLoading }: 
   });
 
   return (
-    <div className="component-card">
-      <div className="card-header">
-        <div className="card-title-group">
-          <span>{createdAt}</span>
-          <p className="card-prompt">{component.prompt}</p>
-        </div>
-        <div className="card-actions">
+    <article className="window component-window">
+      <TitleBar
+        title={component.prompt}
+        onClose={() => onRemove(component.id)}
+        closeLabel="삭제"
+      />
+      <div className="window-toolbar">
+        <div className="segmented" role="group" aria-label="보기 전환">
           <button
-            className="btn-refresh"
-            onClick={() => setPreviewKey((k) => k + 1)}
-            title="미리보기 새로고침"
-            aria-label="미리보기 새로고침"
+            className="segment"
+            aria-pressed={activeTab === 'preview'}
+            onClick={() => setActiveTab('preview')}
           >
-            ↻
+            미리보기
           </button>
           <button
-            className="btn-regenerate"
+            className="segment"
+            aria-pressed={activeTab === 'code'}
+            onClick={() => setActiveTab('code')}
+          >
+            코드
+          </button>
+        </div>
+        <span className="toolbar-time">{createdAt} 생성</span>
+        <div className="toolbar-actions">
+          {activeTab === 'preview' && (
+            <button className="btn" onClick={() => setPreviewKey((k) => k + 1)}>
+              처음부터 재생
+            </button>
+          )}
+          <button
+            className="btn"
             onClick={() => onRegenerate(component.prompt)}
             disabled={isLoading}
           >
             {isLoading ? '생성 중...' : '재생성'}
           </button>
-          <button
-            className="btn-remove"
-            onClick={() => onRemove(component.id)}
-          >
-            삭제
-          </button>
         </div>
       </div>
-      <div className="card-tabs">
-        <button
-          className={`tab ${activeTab === 'preview' ? 'tab--active' : ''}`}
-          onClick={() => setActiveTab('preview')}
-        >
-          미리보기
-        </button>
-        <button
-          className={`tab ${activeTab === 'code' ? 'tab--active' : ''}`}
-          onClick={() => setActiveTab('code')}
-        >
-          코드
-        </button>
-      </div>
-      <div className="card-content">
+      <div className="window-content">
         {activeTab === 'preview' ? (
           <LivePreview key={previewKey} code={component.code} />
         ) : (
           <CodeView code={component.code} />
         )}
       </div>
-    </div>
+    </article>
   );
 }
