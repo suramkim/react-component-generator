@@ -1,8 +1,16 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import type { GeneratedComponent, Provider } from '../types';
+import {
+  STORAGE_KEYS,
+  addPromptHistory,
+  readStorage,
+  reviveComponents,
+  writeStorage,
+} from '../utils/storage';
 
 interface UseComponentGeneratorReturn {
   components: GeneratedComponent[];
+  promptHistory: string[];
   isLoading: boolean;
   error: string | null;
   generate: (prompt: string, apiKey: string | undefined, provider: Provider) => Promise<void>;
@@ -11,13 +19,29 @@ interface UseComponentGeneratorReturn {
 }
 
 export function useComponentGenerator(): UseComponentGeneratorReturn {
-  const [components, setComponents] = useState<GeneratedComponent[]>([]);
+  const [components, setComponents] = useState<GeneratedComponent[]>(() =>
+    readStorage(STORAGE_KEYS.components, [], reviveComponents),
+  );
+  const [promptHistory, setPromptHistory] = useState<string[]>(() =>
+    readStorage(STORAGE_KEYS.promptHistory, [], (raw) =>
+      Array.isArray(raw) ? raw.filter((p): p is string => typeof p === 'string') : undefined,
+    ),
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    writeStorage(STORAGE_KEYS.components, components);
+  }, [components]);
+
+  useEffect(() => {
+    writeStorage(STORAGE_KEYS.promptHistory, promptHistory);
+  }, [promptHistory]);
 
   const generate = useCallback(async (prompt: string, apiKey: string | undefined, provider: Provider) => {
     setIsLoading(true);
     setError(null);
+    setPromptHistory((prev) => addPromptHistory(prev, prompt));
 
     try {
       const res = await fetch('/api/generate', {
@@ -56,5 +80,5 @@ export function useComponentGenerator(): UseComponentGeneratorReturn {
     setComponents([]);
   }, []);
 
-  return { components, isLoading, error, generate, removeComponent, clearAll };
+  return { components, promptHistory, isLoading, error, generate, removeComponent, clearAll };
 }

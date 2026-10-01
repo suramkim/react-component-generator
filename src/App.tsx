@@ -4,6 +4,7 @@ import { ComponentCard } from './components/ComponentCard';
 import { TitleBar } from './components/TitleBar';
 import { useComponentGenerator } from './hooks/useComponentGenerator';
 import type { Provider } from './types';
+import { STORAGE_KEYS, readStorage, writeStorage } from './utils/storage';
 import './App.css';
 
 const PROVIDER_CONFIG = {
@@ -16,17 +17,31 @@ function formatClock(date: Date) {
 }
 
 function App() {
-  const [apiKey, setApiKey] = useState('');
+  const [apiKey, setApiKey] = useState(() =>
+    readStorage(STORAGE_KEYS.apiKey, '', (raw) => (typeof raw === 'string' ? raw : undefined)),
+  );
   const [showKey, setShowKey] = useState(false);
-  const [provider, setProvider] = useState<Provider>('google');
+  const [provider, setProvider] = useState<Provider>(() =>
+    readStorage<Provider>(STORAGE_KEYS.provider, 'google', (raw) =>
+      raw === 'anthropic' || raw === 'google' ? raw : undefined,
+    ),
+  );
   const [keyError, setKeyError] = useState<string | null>(null);
   const [clock, setClock] = useState(() => formatClock(new Date()));
   const [envKeys, setEnvKeys] = useState<Record<Provider, boolean>>({
     anthropic: false,
     google: false,
   });
-  const { components, isLoading, error, generate, removeComponent, clearAll } =
+  const { components, promptHistory, isLoading, error, generate, removeComponent, clearAll } =
     useComponentGenerator();
+
+  useEffect(() => {
+    writeStorage(STORAGE_KEYS.apiKey, apiKey);
+  }, [apiKey]);
+
+  useEffect(() => {
+    writeStorage(STORAGE_KEYS.provider, provider);
+  }, [provider]);
 
   useEffect(() => {
     fetch('/api/config')
@@ -88,7 +103,7 @@ function App() {
         <section className="window composer-window" aria-labelledby="composer-title">
           <TitleBar id="composer-title" title="새 컴포넌트" />
           <div className="window-body">
-            <PromptInput onGenerate={handleGenerate} isLoading={isLoading} />
+            <PromptInput onGenerate={handleGenerate} isLoading={isLoading} history={promptHistory} />
           </div>
         </section>
 
