@@ -657,6 +657,28 @@
   tab-size: 2;
 }
 
+.code-cursor {
+  display: inline-block;
+  width: 7px;
+  height: 1.1em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: currentColor;
+  animation: cursor-blink 1s steps(2, start) infinite;
+}
+
+@keyframes cursor-blink {
+  to {
+    visibility: hidden;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .code-cursor {
+    animation: none;
+  }
+}
+
 /* 반응형 -------------------------------------------------------------- */
 
 @media (max-width: 960px) {

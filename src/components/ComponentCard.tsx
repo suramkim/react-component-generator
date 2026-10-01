@@ -14,8 +14,11 @@ interface ComponentCardProps {
 type Tab = 'preview' | 'code';
 
 export function ComponentCard({ component, onRemove, onRegenerate, isLoading }: ComponentCardProps) {
-  const [activeTab, setActiveTab] = useState<Tab>('preview');
+  // 스트리밍 중에는 코드 탭 고정, 끝나면 사용자가 고르기 전까지 미리보기 탭.
+  const [selectedTab, setActiveTab] = useState<Tab | null>(null);
+  const activeTab: Tab = component.isStreaming ? 'code' : (selectedTab ?? 'preview');
   const [previewKey, setPreviewKey] = useState(0);
+
   const createdAt = component.createdAt.toLocaleTimeString('ko-KR', {
     hour: '2-digit',
     minute: '2-digit',
@@ -34,6 +37,7 @@ export function ComponentCard({ component, onRemove, onRegenerate, isLoading }: 
             className="segment"
             aria-pressed={activeTab === 'preview'}
             onClick={() => setActiveTab('preview')}
+            disabled={component.isStreaming}
           >
             미리보기
           </button>
@@ -45,7 +49,7 @@ export function ComponentCard({ component, onRemove, onRegenerate, isLoading }: 
             코드
           </button>
         </div>
-        <span className="toolbar-time">{createdAt} 생성</span>
+        <span className="toolbar-time">{component.isStreaming ? '생성 중...' : `${createdAt} 생성`}</span>
         <div className="toolbar-actions">
           {activeTab === 'preview' && (
             <button className="btn" onClick={() => setPreviewKey((k) => k + 1)}>
@@ -65,7 +69,7 @@ export function ComponentCard({ component, onRemove, onRegenerate, isLoading }: 
         {activeTab === 'preview' ? (
           <LivePreview key={previewKey} code={component.code} />
         ) : (
-          <CodeView code={component.code} />
+          <CodeView code={component.code} isStreaming={component.isStreaming} />
         )}
       </div>
     </article>

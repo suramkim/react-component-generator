@@ -156,18 +156,6 @@ function App() {
           </div>
         )}
 
-        {isLoading && (
-          <div className="window loading-window" role="status">
-            <TitleBar title="생성 중" />
-            <div className="window-body">
-              <p>{activeProvider} 모델이 컴포넌트를 만들고 있습니다.</p>
-              <div className="progress" aria-hidden="true">
-                <div className="progress-bar" />
-              </div>
-            </div>
-          </div>
-        )}
-
         {components.length === 0 && !isLoading && (
           <div className="empty-state">
             <p className="empty-title">아직 만든 컴포넌트가 없습니다</p>
