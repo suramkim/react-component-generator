@@ -1,8 +1,5 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import 'galmuri/dist/galmuri.css'
-import '@fontsource/ibm-plex-sans-kr/400.css'
-import '@fontsource/ibm-plex-sans-kr/600.css'
 import './index.css'
 import App from './App.tsx'
 
